@@ -1,10 +1,30 @@
 import pandas as pd
+import argparse
 
 sql_query = ""
 columns = []
 headers = []
-headers_row = 0
 table = ""
+s_path = ""
+d_path = ""
+
+
+def parse_flags():
+    global table, s_path, d_path
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-t", "--table", help="Table name")
+    parser.add_argument("-s", "--source", help="Path of the source csv file")
+    parser.add_argument("-d", "--destination", help="Path of the destination sql generated file")
+
+    args = parser.parse_args()
+
+    table = args.table
+    s_path = args.source
+    d_path = args.destination
+
+    return
 
 
 def sql_generate():
@@ -41,16 +61,16 @@ def sql_generate():
     return
 
 
-def read_csv(path=""):
+def read_csv(path="./a.csv"):
     global headers, headers_row, columns
-    columns = pd.read_csv(path, header=headers_row)
+    columns = pd.read_csv(path)
     headers = columns.columns
     columns = columns.values.tolist()
 
     return
 
 
-def write_sql(path=""):
+def write_sql(path="./a.sql"):
     global sql_query
     f = open(path, "w+", encoding='utf-8')
     f.write(sql_query)
@@ -59,6 +79,7 @@ def write_sql(path=""):
 
 
 if __name__ == '__main__':
-    read_csv()
+    parse_flags()
+    read_csv(path=s_path)
     sql_generate()
-    write_sql()
+    write_sql(path=d_path)
