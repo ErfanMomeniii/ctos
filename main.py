@@ -1,9 +1,9 @@
 import pandas as pd
 import argparse
 
-sql_query = ""
 columns = []
 headers = []
+sql_query = ""
 table = ""
 s_path = ""
 d_path = ""
