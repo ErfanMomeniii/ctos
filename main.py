@@ -3,6 +3,7 @@ import argparse
 
 columns = []
 headers = []
+extra_values = []
 sql_query = ""
 table = ""
 s_path = ""
@@ -10,13 +11,14 @@ d_path = ""
 
 
 def parse_flags():
-    global table, s_path, d_path
+    global table, s_path, d_path, extra_values
 
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-t", "--table", help="Table name")
     parser.add_argument("-s", "--source", help="Path of the source csv file")
     parser.add_argument("-d", "--destination", help="Path of the destination sql generated file")
+    parser.add_argument("-e", "--extra", help="Extra columns for each row seperated with comma")
 
     args = parser.parse_args()
 
@@ -24,11 +26,16 @@ def parse_flags():
     s_path = args.source
     d_path = args.destination
 
+    for i in args.extra.split(','):
+        j = i.split('=')
+        headers.append(j[0].strip())
+        extra_values.append(j[1].strip())
+
     return
 
 
 def sql_generate():
-    global headers, columns, sql_query
+    global headers, columns, sql_query, extra_values
 
     if len(columns) == 0:
         return
@@ -40,17 +47,24 @@ def sql_generate():
         sql_query += F"`{header}` "
         if i + 1 != len(headers):
             sql_query += ","
-
     sql_query += ") Values"
     sql_query += "\n"
 
-    for i, columns in enumerate(columns):
+    for i, column in enumerate(columns):
         sql_query += "("
-        for j, _ in enumerate(columns):
-            sql_query += F"'{columns[j]}'"
-            if j + 1 != len(columns):
+
+        for j, _ in enumerate(extra_values):
+            sql_query += F"'{extra_values[j]}'"
+            if j + 1 != len(extra_values) or (j + 1 == len(extra_values) and len(column) > 0):
                 sql_query += ','
+
+        for j, _ in enumerate(column):
+            sql_query += F"'{column[j]}'"
+            if j + 1 != len(column):
+                sql_query += ','
+
         sql_query += ")"
+
         if i + 1 == len(columns):
             sql_query += ";"
         else:
@@ -64,7 +78,7 @@ def sql_generate():
 def read_csv(path="./a.csv"):
     global headers, headers_row, columns
     columns = pd.read_csv(path)
-    headers = columns.columns
+    [headers.append(i) for i in columns.columns.tolist()]
     columns = columns.values.tolist()
 
     return
